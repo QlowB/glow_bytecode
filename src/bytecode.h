@@ -427,7 +427,7 @@ typedef enum {
     GLOW_DEREF_INT64 = 0xE8,
     GLOW_DEREF_REFERENCE = 0xE9,
 
-    GLOW_STORE_IN_FIELD_8
+    GLOW_STORE_IN_FIELD_8 = 0xEA,
 
     /*!
      * calls a native function whose index is stored in the next 4 bytes
