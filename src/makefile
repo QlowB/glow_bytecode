@@ -4,7 +4,7 @@ LDFLAGS       :=
 OBJECTS       := bytecode_interpreter.o main.o
 ASM_SUBDIR    := glas
 DISASM_SUBDIR := glds
-EXECUTABLES   := glow $(ASM_SUBDIR)/glas $(DISASM_SUBDIR)/glds
+EXECUTABLES   := glow $(ASM_SUBDIR)/glas # $(DISASM_SUBDIR)/glds
 INSTALLPREF   := /usr/local
 
 all: clean_glas $(OBJECTS) $(EXECUTABLES)

@@ -427,7 +427,17 @@ typedef enum {
     GLOW_DEREF_INT64 = 0xE8,
     GLOW_DEREF_REFERENCE = 0xE9,
 
+    
+    
+    /*!
+     * stores an 8-bit value from the top of the stack into a field
+     * of an object reference (second position on the stack). The field
+     * is identified by four bytes following this instruction.
+     */
     GLOW_STORE_IN_FIELD_8 = 0xEA,
+    GLOW_STORE_IN_FIELD_16 = 0xEB,
+    GLOW_STORE_IN_FIELD_32 = 0xEC,
+    GLOW_STORE_IN_FIELD_64 = 0xED,
 
     /*!
      * calls a native function whose index is stored in the next 4 bytes
