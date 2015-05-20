@@ -1,0 +1,30 @@
+
+\title{The Glow Object File Specification}
+\author{Nicolas Winkler}
+\date{20 May 2015}
+
+\documentclass[12pt]{article}
+
+\begin{document}
+\maketitle
+
+\section{General}
+
+A Glow Object File is a file containing a piece of Glow bytecode, which
+can either be run directly by a Glow virtual machine, or compiled using
+a Glow compiler tool.
+It can be viewed as the equivalent to *.class files for Java classes or
+*.obj/*.o files for C/C++ objects.
+
+
+
+\section{Header}
+The Glow Object File is uses little-endian encoding for all integers
+larger than one byte. The hexadecimal 32-bit constant \texttt{0xABCDEF01} would
+therefore be stored as the byte sequence \texttt{\{0x01, 0xEF, 0xCD, 0xAB\}},
+which is perfectly counter-intuitive. But it's how the popular CPU architectures
+nowadays work.
+
+
+
+\end{document}
