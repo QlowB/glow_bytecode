@@ -4,14 +4,12 @@
 #include "../integers.h"
 
 /*!
- * The glob file format consists of a header (type: glow_glob_header)
- * and the byte code data. The bytecode data is stored at an absolute
- * offset in the file, specified by bytecode_offset in glow_glob_header.
+ *
  */
 typedef struct
 {
     /*! "GLOB" characters */
-    glow_uint8      glob[4];
+    glow_uint8      header[4];
 
     /*! version of the file */
     glow_uint16     version[4];
@@ -25,17 +23,26 @@ typedef struct
     /*!
      * offset to a table which contains
      */
-    glow_uint32     function_table_offset;
-
-    /*!
-     * offset to the table with function entries
-     */
-    glow_uint32     function_calls_offset;
-} glow_glob_header;
+    glow_uint32     linker_table_offset;
+} glow_glob_file;
 
 
+/*!
+ *
+ */
+enum {
+    GLOB_CLASS_REFERENCE,
+    GLOB_METHOD_REFERENCE,
+};
+
+/*!
+ *
+ */
 typedef struct
 {
-} glow_glob_function_table_entry;
+    glow_uint8      type;
+    glow_uint32     length;
+    char            entry[0];
+} glow_glob_linker_table_entry;
 
 #endif // GLOW_GLOB_HEADERS_H_

@@ -20,7 +20,7 @@ int main(int argc, const char** argv)
 {
     glow_run_options options;
     glow_read_options(&options, argc, argv);
-    
+
     if (glow_has_option(&options, "-h")) {
         glow_print_reference(stdout);
         exit(0);
@@ -39,7 +39,7 @@ int main(int argc, const char** argv)
         fclose(yyin);
     }
 
-    
+
     if (program != 0 && response == 0) {
 
         int link_status = glow_link(program);
