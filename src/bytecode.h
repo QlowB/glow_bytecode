@@ -387,58 +387,62 @@ typedef enum {
     GLOW_SUB_FLOAT32 = 0xAA,
     GLOW_SUB_FLOAT64 = 0xAB,
 
-    /*
-    GLOW_SHIFT_LEFT = 0xAC,
-    GLOW_SHIFT_RIGHT = 0xAD,
-    GLOW_SHIFT_RIGHT_ARITHMETIC = 0xAE,
-    */
-
     /*!
-     * \brief allocates an object and stores the result on the stack
+     * \brief allocates an object and stores the created reference on the stack
      *
      * This command allocates a new object. The type of the object to allocate
      * is stored in the next four bytes as an argument.
      */
     GLOW_ALLOCATE_OBJECT = 0xB0,
+    GLOW_DELETE_OBJECT = 0xB1,
 
-    /*!
-     * \brief loads an element from an array
-     *
-     * dereferences an array in the operand stack and an index on top of it
-     * (index on top of reference, both word size).
-     * This command is followed by a 32-bit unsigned integer defining the
-     * size of the structure in the array.
-     */
-    GLOW_DEREF_ARRAY_INT8 = 0xE0,
-    GLOW_DEREF_ARRAY_INT16 = 0xE1,
-    GLOW_DEREF_ARRAY_INT32 = 0xE2,
-    GLOW_DEREF_ARRAY_INT64 = 0xE3,
-    GLOW_DEREF_ARRAY_REFERENCE = 0xE4,
+    GLOW_LOAD_FROM_FIELD_8 = 0xD6,
+    GLOW_LOAD_FROM_FIELD_16 = 0xD7,
+    GLOW_LOAD_FROM_FIELD_32 = 0xD8,
+    GLOW_LOAD_FROM_FIELD_64 = 0xD9,
+    GLOW_LOAD_FROM_FIELD_REFERENCE = 0xDA,
 
-    /*!
-     * \brief loads an element from an array
-     *
-     * dereferences a pointer in the operand stack and adds an immediate
-     * offset to it (the offset is the 32-bit operand).
-     */
-    GLOW_DEREF_INT8 = 0xE5,
-    GLOW_DEREF_INT16 = 0xE6,
-    GLOW_DEREF_INT32 = 0xE7,
-    GLOW_DEREF_INT64 = 0xE8,
-    GLOW_DEREF_REFERENCE = 0xE9,
-
-    
-    
     /*!
      * stores an 8-bit value from the top of the stack into a field
      * of an object reference (second position on the stack). The field
      * is identified by four bytes following this instruction.
      */
-    GLOW_STORE_IN_FIELD_8 = 0xEA,
-    GLOW_STORE_IN_FIELD_16 = 0xEB,
-    GLOW_STORE_IN_FIELD_32 = 0xEC,
-    GLOW_STORE_IN_FIELD_64 = 0xED,
-
+    GLOW_STORE_IN_FIELD_8 = 0xDB,
+    GLOW_STORE_IN_FIELD_16 = 0xDC,
+    GLOW_STORE_IN_FIELD_32 = 0xDD,
+    GLOW_STORE_IN_FIELD_64 = 0xDE,
+    GLOW_STORE_IN_FIELD_REFERENCE = 0xDF,
+    
+    /*!
+     * \brief loads an element from an array
+     *
+     * dereferences an array in the operand stack and an index on top of it
+     * (index on top of reference, 64-bits).
+     * This command is followed by a 32-bit unsigned integer defining the
+     * size of the structure in the array.
+     */
+    GLOW_LOAD_FROM_ARRAY_8 = 0xE0,
+    GLOW_LOAD_FROM_ARRAY_16 = 0xE1,
+    GLOW_LOAD_FROM_ARRAY_32 = 0xE2,
+    GLOW_LOAD_FROM_ARRAY_64 = 0xE3,
+    GLOW_LOAD_FROM_ARRAY_REFERENCE = 0xE4,
+    
+    /*!
+     * \brief stores an element in an array
+     *
+     * stores the value on top of the stack in the array at an index.
+     *
+     * stack before execution should be:
+     *      value
+     *      index
+     *      array_reference
+     */
+    GLOW_STORE_IN_ARRAY_8 = 0xE5,
+    GLOW_STORE_IN_ARRAY_16 = 0xE6,
+    GLOW_STORE_IN_ARRAY_32 = 0xE7,
+    GLOW_STORE_IN_ARRAY_64 = 0xE8,
+    GLOW_STORE_IN_ARRAY_REFERENCE = 0xE9,
+    
     /*!
      * calls a native function whose index is stored in the next 4 bytes
      */

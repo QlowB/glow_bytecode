@@ -510,7 +510,7 @@ start:
 #ifdef ARCHITECTURE_X86_64
         asm("imul %%rbx" : "=a"(temps64), "=d"(temps64_2) : "a" (temps64), "b" (temps64_2));
 #else
-#error "instruction GLOW_MULT_INT64 not yet implemented for x86 architecture."
+#error "instruction GLOW_MULT_INT64 not yet implemented for architecture other than x68_64."
 #endif
         push_operand64(runtime, temps64);
         push_operand64(runtime, temps64_2);
@@ -550,7 +550,7 @@ start:
 #ifdef ARCHITECTURE_X86_64
         asm("imul %%rbx" : "=a"(temp64), "=d"(temp64_2) : "a" (temp64), "b" (temp64_2));
 #else
-#error "instruction GLOW_MULT_UINT64 not yet implemented for x86 architecture."
+#error "instruction GLOW_MULT_UINT64 not yet implemented for architecture other than x68_64."
 #endif
         push_operand64(runtime, temp64);
         push_operand64(runtime, temp64_2);
@@ -760,7 +760,18 @@ OPERATION_INT(temp64, temp64_2, glow_uint64, pop_operand64, push_operand64, id, 
         OPERATION_UINT64(GLOW_SUB_INT64, -)
         OPERATION_FLOAT32(GLOW_SUB_FLOAT32, -)
         OPERATION_FLOAT64(GLOW_SUB_FLOAT64, -)
-;
+
+
+	case GLOW_ALLOCATE_OBJECT: {
+		glow_uint32 size = *(glow_uint32*)(runtime->instruction_pointer + 1);
+		push_operand_word(runtime, (glow_word) malloc(size));
+		break;
+	}
+    case GLOW_DELETE_OBJECT: {
+		glow_word val = pop_operand_word(runtime);
+		free((void*) val);
+		break;
+	}
 
     /*
      * calls

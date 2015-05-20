@@ -171,17 +171,20 @@ static struct glow_conversion_entry conversion_table[] =
 {"subf32",  GLOW_SUB_FLOAT32},
 {"subf64",  GLOW_SUB_FLOAT64},
 
-{"dea8",    GLOW_DEREF_ARRAY_INT8},
-{"dea16",   GLOW_DEREF_ARRAY_INT16},
-{"dea32",   GLOW_DEREF_ARRAY_INT32},
-{"dea64",   GLOW_DEREF_ARRAY_INT64},
-{"dear",    GLOW_DEREF_ARRAY_REFERENCE},
+{"new", GLOW_ALLOCATE_OBJECT},
+{"rem", GLOW_DELETE_OBJECT},
 
-{"de8",     GLOW_DEREF_INT8},
-{"de16",    GLOW_DEREF_INT16},
-{"de32",    GLOW_DEREF_INT32},
-{"de64",    GLOW_DEREF_INT64},
-{"der",     GLOW_DEREF_REFERENCE},
+{"loadf8", GLOW_LOAD_FROM_FIELD_8},
+{"loadf16", GLOW_LOAD_FROM_FIELD_16},
+{"loadf32", GLOW_LOAD_FROM_FIELD_32},
+{"loadf64", GLOW_LOAD_FROM_FIELD_64},
+{"loadfref", GLOW_LOAD_FROM_FIELD_REFERENCE},
+
+{"storef8", GLOW_STORE_IN_FIELD_8},
+{"storef16", GLOW_STORE_IN_FIELD_16},
+{"storef32", GLOW_STORE_IN_FIELD_32},
+{"storef64", GLOW_STORE_IN_FIELD_64},
+{"storefref", GLOW_STORE_IN_FIELD_REFERENCE},
 
 {"calln",   GLOW_CALL_NATIVE},
 

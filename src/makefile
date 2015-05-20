@@ -41,5 +41,5 @@ install: all
 clean:
 	rm -f *.o glow
 	cd $(ASM_SUBDIR) && $(MAKE) clean
-	cd $(DISASM_SUBDIR) && $(MAKE) clean
+	#cd $(DISASM_SUBDIR) && $(MAKE) clean
 

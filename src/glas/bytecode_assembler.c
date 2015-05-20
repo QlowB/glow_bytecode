@@ -215,17 +215,6 @@ int glow_compile_instruction(glow_bytecode_block* block, glow_assembler_instruct
         break;
 
     case GLOW_LOAD_CONSTANT_INT32:
-    case GLOW_DEREF_ARRAY_INT8:
-    case GLOW_DEREF_ARRAY_INT16:
-    case GLOW_DEREF_ARRAY_INT32:
-    case GLOW_DEREF_ARRAY_INT64:
-    case GLOW_DEREF_ARRAY_REFERENCE:
-    case GLOW_DEREF_INT8:
-    case GLOW_DEREF_INT16:
-    case GLOW_DEREF_INT32:
-    case GLOW_DEREF_INT64:
-    case GLOW_DEREF_REFERENCE:
-
     case GLOW_LOAD_LOCAL_INT8:
     case GLOW_LOAD_LOCAL_INT16:
     case GLOW_LOAD_LOCAL_INT32:
@@ -237,6 +226,21 @@ int glow_compile_instruction(glow_bytecode_block* block, glow_assembler_instruct
     case GLOW_STORE_LOCAL_INT64:
     case GLOW_STORE_LOCAL_REFERENCE:
 
+    case GLOW_ALLOCATE_OBJECT:
+    case GLOW_DELETE_OBJECT:
+    
+    case GLOW_LOAD_FROM_FIELD_8:
+    case GLOW_LOAD_FROM_FIELD_16:
+    case GLOW_LOAD_FROM_FIELD_32:
+    case GLOW_LOAD_FROM_FIELD_64:
+    case GLOW_LOAD_FROM_FIELD_REFERENCE:
+    
+    case GLOW_STORE_IN_FIELD_8:
+    case GLOW_STORE_IN_FIELD_16:
+    case GLOW_STORE_IN_FIELD_32:
+    case GLOW_STORE_IN_FIELD_64:
+    case GLOW_STORE_IN_FIELD_REFERENCE:
+    
     case GLOW_CALL_NATIVE:
 
         bytes_written = glow_compile_single_int(
@@ -380,6 +384,18 @@ int glow_compile_instruction(glow_bytecode_block* block, glow_assembler_instruct
     case GLOW_SUB_INT64:
     case GLOW_SUB_FLOAT32:
     case GLOW_SUB_FLOAT64:
+    
+    case GLOW_LOAD_FROM_ARRAY_8:
+    case GLOW_LOAD_FROM_ARRAY_16:
+    case GLOW_LOAD_FROM_ARRAY_32:
+    case GLOW_LOAD_FROM_ARRAY_64:
+    case GLOW_LOAD_FROM_ARRAY_REFERENCE:
+    case GLOW_STORE_IN_ARRAY_8:
+    case GLOW_STORE_IN_ARRAY_16:
+    case GLOW_STORE_IN_ARRAY_32:
+    case GLOW_STORE_IN_ARRAY_64:
+    case GLOW_STORE_IN_ARRAY_REFERENCE:
+    
     case GLOW_EXIT:
 
         bytes_written = glow_compile_single(code_buf, operation);

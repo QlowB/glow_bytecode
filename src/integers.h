@@ -38,7 +38,7 @@ typedef unsigned long long int glow_uint64;
 /*!
  * machine word size
  */
-typedef unsigned long glow_word;
+typedef void* glow_word;
 
 
 typedef float glow_float32;
