@@ -14,16 +14,19 @@ typedef struct
     /*! version of the file */
     glow_uint16     version[4];
 
+    glow_uint32     symbol_table_offset;
+    glow_uint32     symbol_table_length;
+
+    glow_uint32     constant_table_offset;
+    glow_uint32     constant_table_length;
+
     /*!
      * offset (from beginning of the file) to the bytecode data
      * (the value must be stored in little-endian mode)
      */
     glow_uint32     bytecode_offset;
+    glow_uint32     bytecode_length;
 
-    /*!
-     * offset to a table which contains
-     */
-    glow_uint32     linker_table_offset;
 } glow_glob_file;
 
 
@@ -40,9 +43,8 @@ enum {
  */
 typedef struct
 {
-    glow_uint8      type;
-    glow_uint32     length;
-    char            entry[0];
-} glow_glob_linker_table_entry;
+    glow_uint32     type;
+    glow_uint32     argument;
+} glow_glob_symbol_table_entry;
 
 #endif // GLOW_GLOB_HEADERS_H_
