@@ -1,0 +1,230 @@
+% 
+% The Glow Object File Format Specification
+% author: Nicolas Winkler
+%
+%
+% This latex file is free software: you can redistribute it and/or modify
+% it under the terms of the GNU General Public License as published by
+% the Free Software Foundation, either version 3 of the License, or
+% (at your option) any later version.
+%
+% This program is distributed in the hope that it will be useful,
+% but WITHOUT ANY WARRANTY; without even the implied warranty of
+% MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+% GNU General Public License for more details.
+%
+% You should have received a copy of the GNU General Public License
+% along with this program.  If not, see <http://www.gnu.org/licenses/>.
+%
+
+
+
+\documentclass[12pt]{article}
+
+\usepackage{listings}
+\usepackage{hyperref}
+%\hypersetup{colorlinks, 
+%           citecolor=black,
+%           filecolor=black,
+%           linkcolor=black,
+%           urlcolor=black,
+%           bookmarksopen=true,
+%           pdftex}
+
+\lstnewenvironment{code}[1][]%
+{
+   \noindent
+   \minipage{\linewidth} 
+   \vspace{0.5\baselineskip}
+   \lstset{basicstyle=\ttfamily\footnotesize,frame=single,#1}}
+{\endminipage}
+
+
+\begin{document}
+
+\begin{titlepage}
+    \begin{center}
+        \vspace*{1cm}
+        {
+            \Huge        
+            \textbf{The Glow Object File Format Specification}
+        }
+
+        \vspace{0.7cm}
+        % subtitle
+        
+        
+        \vspace{0.5cm}
+        { \large
+        \textbf{21 May 2015}}
+
+        \vspace{1cm}
+
+        { \Large
+        \textbf{Nicolas Winkler}
+        }
+        \vfill
+
+\bigskip
+\begin{quote}
+    Copyright \copyright{} 2015 Nicolas Winkler.
+    Permission is granted to copy, distribute and/or modify this document
+    under the terms of the GNU Free Documentation License, Version 1.3
+    or any later version published by the Free Software Foundation;
+    with no Invariant Sections, no Front-Cover Texts, and no Back-Cover Texts.
+    A copy of the license is distributed along this file as a separate document 
+    named ``GNU\_Free\_Documentation\_License.pdf''.
+\end{quote}
+\bigskip
+
+        \vspace{1cm}
+        
+    \end{center}
+\end{titlepage}
+
+\setlength{\parindent}{0cm}
+\setlength{\parskip}{0.2cm}
+
+\section*{The Glow Object File Format}
+
+A Glow object file is a file containing a piece of Glow bytecode, which
+can either be run directly by a Glow virtual machine, or compiled using
+a Glow compiler tool.
+It can be viewed as the equivalent to *.class files for Java classes or
+*.obj/*.o files for C/C++ objects.
+
+
+
+The Glow object file format uses little-endian encoding for all integers
+larger than one byte. The hexadecimal 32-bit constant \texttt{0xABCDEF01} would
+therefore be stored as the byte sequence \texttt{\{0x01, 0xEF, 0xCD, 0xAB\}},
+which is perfectly counter-intuitive. But it's how the popular CPU architectures
+nowadays work.
+
+Glow object files constist of
+\begin{itemize}
+\item header
+\item symbol table
+\item constant table
+\item bytecode
+\end{itemize}
+
+\subsection*{Header}
+The header is a fixed-size data structure at the beginning of every Glow object file.
+
+\begin{code}[language=C]
+structure header {
+    4 bytes: magic number;
+    8 bytes: version;
+    4 bytes: symbol table offset;
+    4 bytes: symbol table length;
+    4 bytes: constant table offset;
+    4 bytes: constant table length;
+    4 bytes: bytecode offset;
+    4 bytes: bytecode length;
+}
+\end{code}
+
+\paragraph{magic number}
+    These four bytes identify the Glow object file format.
+    Their value is the ASCII representation of "GLOB" which
+    corresponds to the hexadecimal value \texttt{0x424F4C47}.
+
+\paragraph{version}
+    This entry specifies the version of the object file. The two most
+    significant bytes (note: these are the last and the second last of the 8 bytes,
+    say thanks to little-endian) stand for the main version, where the two following
+    bytes can be increased on little changes. The remaining 4 bytes may be used in the
+    future, or can be used for very very small changes if needed.
+
+\paragraph{symbol table offset}
+    This value contains an offset pointing from the beginning of the file to the first entry
+    of the symbol table, which for one thing holds references to the methods and classes in the
+    current object file and for another thing also contains symbol names pointing to
+    extern Glow object files.
+
+\paragraph{symbol table length}
+    Specifies the number of entries in the symbol table. Since all entries in this table
+    are the same size, the whole size of this table can be calculated from this value.
+
+\paragraph{constant table offset}
+    This value contains an offset pointing from the beginning of the file to the first entry
+    of the constant table, a table, which stores constants, which are too big to store
+    directly in the bytecode (e.g strings). 
+
+\paragraph{constant table length}
+    Specifies the number of entries in the constant pool table. Note that the entries of this
+    table may vary in size, so the absolute size of the table can't yet be decided.
+
+\paragraph{bytecode offset}
+    Defines the offset from the beginning of the file to the start of the bytecode sequence.
+
+\paragraph{bytecode length}
+    This value contains the number of bytes the bytecode part of the file takes up.
+
+\subsection*{Symbol Table}
+This section constists of a table with entries for each class used and for each function called in the bytecode.
+
+Each entry is of the following format:
+
+\begin{code}[language=C]
+structure symbol_table_entry {
+    1 byte:  type;
+    4 bytes: argument;
+}
+\end{code}
+
+\paragraph{type} is always one of the following values:
+ 
+\begin{tabular}{| l | l |}
+\hline
+\verb|symbol_table_entry::type| & Value \\
+\hline \hline
+\verb|GLOB_CLASS_REFERENCE| & 0x01 \\
+\hline
+\verb|GLOW_METHOD_REFERENCE| & 0x02 \\
+\hline
+\end{tabular}
+
+\paragraph{argument}
+    The argument is a reference to the constant table entry containing the class/method name.
+
+Several bytecode instructions will contain a link to an entry of this table:
+
+\begin{itemize}
+\item \verb|GLOW_ALLOCATE_OBJECT = 0xB0| is followed by an index pointing to an entry in this
+    table. This entry must therefore contain information about the class of which an instance
+    should be allocated.
+\item \verb|GLOW_CALL_|... like instructions are also followed by an index pointing to a function
+    entry in this table.
+\end{itemize}
+
+\subsection*{Constant Table}
+
+This table stores big constant values like strings or class/method names.
+
+Entries are of the following format:
+
+\begin{code}[language=C]
+structure constant_table_entry {
+    1 byte:       type;
+    4 bytes:      length;
+    length bytes: data;
+}
+\end{code}
+
+The entries follow each other directly i.e. there is no space between two entries. The offset
+to the next entry can therefore be computed using the formula: \(5 + \verb|length|\).
+
+
+\subsection*{Bytecode}
+
+This is the simplest part of the file. It just contains the plain bytecode content, ready for interpretation
+by an interpreter or further compilation to architecture-specific machine code.
+
+For more information about the Glow bytecode, please read the Glow Bytecode Specification.
+
+\end{document}
+
+
+
