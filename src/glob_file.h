@@ -22,7 +22,8 @@ enum glow_glob_symbol_type {
 typedef struct
 {
     glow_uint8      type;
-    glow_uint32     argument;
+    glow_uint32     argument1;
+    glow_uint32     argument2;
 } glow_symbol_table_entry;
 
 
@@ -67,9 +68,18 @@ typedef struct
  * \brief load the content of a Glow object file
  * \param content the data structure to store the content to
  * \param file stream where the Glow object file is read from
- * \return
+ * \return 0 on success, nonzero otherwise
  */
 int glow_load_glob(glow_object_content* content, FILE* file);
+
+
+/*!
+ * \brief store the content of a Glow object content into a file
+ * \param content the data structure to store
+ * \param file stream where the Glow object file is written to
+ * \return 0 on success, nonzero otherwise
+ */
+int glow_save_glob(glow_object_content* content, FILE* file);
 
 
 /*!

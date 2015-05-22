@@ -157,7 +157,8 @@ Each entry is of the following format:
 \begin{code}[language=C]
 structure symbol_table_entry {
     1 byte:  type;
-    4 bytes: argument;
+    4 bytes: argument1;
+    4 bytes: argument2;
 }
 \end{code}
 
@@ -177,8 +178,12 @@ structure symbol_table_entry {
 \hline
 \end{tabular}
 
-\paragraph{argument}
-    The argument is a reference to the constant table entry containing the class/method name.
+\paragraph{argument1}
+    The argument is a reference to the constant table entry containing the class name.
+
+\paragraph{argument2}
+    The argument is a reference to the constant table entry containing the method name (if needed).
+
 
 Several bytecode instructions will contain a link to an entry of this table:
 

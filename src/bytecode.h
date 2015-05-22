@@ -395,6 +395,41 @@ typedef enum {
      */
     GLOW_ALLOCATE_OBJECT = 0xB0,
     GLOW_DELETE_OBJECT = 0xB1,
+    
+    
+    /*!
+     * \brief call a static function
+     *
+     * The following 4 bytes contain an entry to the method in the symbol table.
+     * The first argument of the entry should link to the the class name, while the second
+     * points to the the method name.
+     *
+     * Arguments are passed in the operand stack.
+     */
+    GLOW_CALL_STATIC = 0xB2,
+    
+    /*!
+     * \brief call a member function
+     *
+     * The following 4 bytes contain an entry to the method in the symbol table.
+     * The first argument of the entry should link to the the class name, while the second
+     * points to the the method name.
+     *
+     * Arguments are passed in the operand stack.
+     */
+    GLOW_CALL_MEMBER = 0xB3,
+    
+    /*!
+     * \brief call a virtual member function
+     * 
+     * The following 4 bytes contain an entry to the method in the symbol table.
+     * The first argument of the entry should link to the the class name, while the second
+     * points to the the method name.
+     *
+     * Arguments are passed in the operand stack.
+     */
+    GLOW_CALL_MEMBER_VIRTUAL = 0xB4,
+
 
     GLOW_LOAD_FROM_FIELD_8 = 0xD6,
     GLOW_LOAD_FROM_FIELD_16 = 0xD7,

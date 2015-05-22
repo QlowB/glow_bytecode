@@ -60,7 +60,8 @@ int glow_load_glob(glow_object_content* content, FILE* file)
     fseek(file, head.symbol_table_offset, SEEK_SET);
     for (size_t i = 0; i < head.symbol_table_length; i++) {
         fread(&content->symbols[i].type, 1, 1, file);
-        fread(&content->symbols[i].argument, 4, 1, file);
+        fread(&content->symbols[i].argument1, 4, 1, file);
+        fread(&content->symbols[i].argument2, 4, 1, file);
     }
 
     fseek(file, head.constant_table_offset, SEEK_SET);
@@ -76,6 +77,41 @@ int glow_load_glob(glow_object_content* content, FILE* file)
     content->bytecode_data = malloc(head.bytecode_length);
     fread(content->bytecode_data, 1, head.bytecode_length, file);
 
+    return 0;
+}
+
+
+int glow_save_glob(glow_object_content* content, FILE* file)
+{
+    glob_header head;
+    
+    memcpy(head.header, "GLOB", 4);
+    memcpy(head.version, supported_version, sizeof head.version);
+    
+    head.symbol_table_offset = sizeof(head);
+    head.symbol_table_length = content->symbol_table_entry_count;
+    
+    head.bytecode_offset = head.symbol_table_offset + 9 * head.symbol_table_length;
+    head.bytecode_length = content->bytecode_size;
+    
+    head.constant_table_offset = head.symbol_table_offset +
+        9 * head.symbol_table_length + head.bytecode_length;
+    head.constant_table_length = content->symbol_table_entry_count;
+    
+
+    fwrite(&head.header, 1, 4, file);
+    fwrite(&head.version, 2, 4, file);
+    fwrite(&head.symbol_table_offset, 4, 1, file);
+    fwrite(&head.symbol_table_length, 4, 1, file);
+    fwrite(&head.constant_table_offset, 4, 1, file);
+    fwrite(&head.constant_table_length, 4, 1, file);
+    fwrite(&head.bytecode_offset, 4, 1, file);
+    fwrite(&head.bytecode_length, 4, 1, file);
+
+    for (size_t i = 0; i < head.symbol_table_length; i++) {
+        
+    }
+    
     return 0;
 }
 
