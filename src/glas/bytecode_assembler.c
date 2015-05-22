@@ -3,6 +3,7 @@
 #include "glob_headers.h"
 #include "../integers.h"
 #include "../bytecode.h"
+#include "../glow_error.h"
 
 #include "instruction_compiler.h"
 
@@ -16,8 +17,6 @@
 static const int new_buffer_size = 1024;
 static const int new_jump_marks_size = 32;
 static const int new_jumps_size = 32;
-
-char glow_error_message[1024];
 
 
 int glow_link(glow_bytecode_block* program)
@@ -126,7 +125,7 @@ void glow_add_bytecode(glow_bytecode_block* block, const char* bytes, int byte_c
 }
 
 
-void glow_add_jump_mark(glow_bytecode_block* block, const char* name, long where)
+void glow_add_jump_mark(glow_bytecode_block* block, const char* name, glow_uint32 where)
 {
     if (block->jump_marks_used_count + 1 >= block->jump_marks_count) {
         glow_jump_mark* new_buffer = malloc(block->jump_marks_count * 2);
@@ -146,7 +145,8 @@ void glow_add_jump_mark(glow_bytecode_block* block, const char* name, long where
 
 
 void glow_add_jump(glow_bytecode_block* block,
-                   const char* name, long link_pos, long from_where)
+                   const char* name, glow_uint32 link_pos,
+                   glow_uint32 from_where, enum glow_jump_type type)
 {
     if (block->jumps_used_count + 1 >= block->jumps_count) {
         glow_jump* new_buffer = malloc(block->jumps_count * 2);
@@ -160,6 +160,7 @@ void glow_add_jump(glow_bytecode_block* block,
     }
 
     block->jumps[block->jumps_used_count].name = name;
+    block->jumps[block->jumps_used_count].type = typ;
     block->jumps[block->jumps_used_count].link_pos = link_pos;
     block->jumps[block->jumps_used_count].from_where = from_where;
     block->jumps_used_count++;
@@ -174,9 +175,6 @@ void glow_add_jump(glow_bytecode_block* block,
  */
 int glow_compile_instruction(glow_bytecode_block* block, glow_assembler_instruction* inst)
 {
-
-
-
     if (inst->is_jump_mark) {
         glow_add_jump_mark(block, inst->operation, block->used_size);
         return 0;
@@ -228,20 +226,29 @@ int glow_compile_instruction(glow_bytecode_block* block, glow_assembler_instruct
 
     case GLOW_ALLOCATE_OBJECT:
     case GLOW_DELETE_OBJECT:
-    
+
     case GLOW_LOAD_FROM_FIELD_8:
     case GLOW_LOAD_FROM_FIELD_16:
     case GLOW_LOAD_FROM_FIELD_32:
     case GLOW_LOAD_FROM_FIELD_64:
     case GLOW_LOAD_FROM_FIELD_REFERENCE:
-    
+
     case GLOW_STORE_IN_FIELD_8:
     case GLOW_STORE_IN_FIELD_16:
     case GLOW_STORE_IN_FIELD_32:
     case GLOW_STORE_IN_FIELD_64:
     case GLOW_STORE_IN_FIELD_REFERENCE:
-    
+
     case GLOW_CALL_NATIVE:
+
+        bytes_written = glow_compile_single_int(
+                code_buf, operation, inst, FOUR_BYTES);
+        break;
+
+
+    case GLOW_CALL_MEMBER:
+    case GLOW_CALL_MEMBER_VIRTUAL:
+    case GLOW_CALL_STATIC:
 
         bytes_written = glow_compile_single_int(
                 code_buf, operation, inst, FOUR_BYTES);
@@ -402,14 +409,16 @@ int glow_compile_instruction(glow_bytecode_block* block, glow_assembler_instruct
         break;
 
 
-    default:
-
+    default: {
+        char buffer[1024];
         if (strlen(inst->operation) < 700)
-            sprintf(glow_error_message, "unknown operation: %s", inst->operation);
+            sprintf(buffer, "unknown operation: %s", inst->operation);
         else
-            sprintf(glow_error_message, "unknown operation");
+            sprintf(buffer, "unknown operation");
+        glow_set_last_error(buffer);
         bytes_written = -1;
         break;
+    }
     }
 
     if (bytes_written <= 0)
@@ -419,59 +428,4 @@ int glow_compile_instruction(glow_bytecode_block* block, glow_assembler_instruct
     glow_add_bytecode(block, code_buf, bytes_written);
     return 0;
 }
-
-
-void glow_save_glob(glow_bytecode_block* block, FILE* stream)
-{
-    glow_glob_header header;
-    memset(&header, 0, sizeof header);
-    header.glob[0] = 'G';
-    header.glob[1] = 'L';
-    header.glob[2] = 'O';
-    header.glob[3] = 'B';
-    
-    header.version[0] = 1;
-    
-    header.bytecode_offset = sizeof header;
-    
-    fwrite(&header, sizeof header, 1, stream);
-    fwrite(block->buffer, block->used_size, 1, stream);
-}
-
-
-void glow_load_glob(glow_bytecode_block* block, FILE* file)
-{
-    fseek(file, 0L, SEEK_END);
-    long file_size = ftell(file);
-    fseek(file, 0L, SEEK_SET);
-    
-    if (file_size < sizeof(glow_glob_header))
-        exit(1); // error
-    
-    glow_glob_header ggh;
-    fread(&ggh, sizeof(ggh), 1, file);
-    
-    fseek(file, ggh.bytecode_offset, SEEK_SET);
-    
-    char* bytecode = malloc(file_size - ggh.bytecode_offset);
-    fread(bytecode, file_size - ggh.bytecode_offset, 1, file);
-    
-    
-    block->buffer = bytecode;
-    block->buffer_size = file_size - ggh.bytecode_offset;
-    block->used_size = block->buffer_size;
-}
-
-
-void glow_get_last_error(char* err_msg, int buffer_size)
-{
-    int errlen = strlen(glow_error_message);
-    if (errlen >= buffer_size) {
-        memcpy(err_msg, glow_error_message, buffer_size - 1);
-        err_msg[buffer_size - 1] = 0;
-    } else {
-        memcpy(err_msg, glow_error_message, errlen + 1);
-    }
-}
-
 

@@ -1,6 +1,9 @@
 #include "glob_file.h"
 #include "glow_error.h"
 
+#include <string.h>
+#include <stdlib.h>
+
 static const glow_uint16 supported_version[4] = {0x0000, 0x0000, 0x0000, 0x0001};
 
 /*!
@@ -46,7 +49,7 @@ int glow_load_glob(glow_object_content* content, FILE* file)
     fread(&head.bytecode_offset, 4, 1, file);
     fread(&head.bytecode_length, 4, 1, file);
 
-    if (memcmp(supported_version, head.version) != 0) {
+    if (memcmp(supported_version, head.version, sizeof supported_version) != 0) {
         glow_set_last_error("incopatible glow object version");
         return 1;
     }
@@ -109,7 +112,17 @@ int glow_save_glob(glow_object_content* content, FILE* file)
     fwrite(&head.bytecode_length, 4, 1, file);
 
     for (size_t i = 0; i < head.symbol_table_length; i++) {
-        
+        fwrite(&content->symbols[i].type, 1, 1, file);
+        fwrite(&content->symbols[i].argument1, 4, 1, file);
+        fwrite(&content->symbols[i].argument2, 4, 1, file);
+    }
+
+    fwrite(content->bytecode_data, 1, head.bytecode_length, file);
+
+    for (size_t i = 0; i < head.constant_table_length; i++) {
+        fwrite(&content->constants[i].type, 1, 1, file);
+        fwrite(&content->constants[i].length, 4, 1, file);
+        fwrite(content->constants[i].data, 1, content->constants[i].length, file);
     }
     
     return 0;

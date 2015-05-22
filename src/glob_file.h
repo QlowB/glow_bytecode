@@ -1,7 +1,7 @@
 #ifndef GLOW_GLOB_HEADERS_H_
 #define GLOW_GLOB_HEADERS_H_
 
-#include "../integers.h"
+#include "integers.h"
 #include <stdio.h>
 
 

@@ -3,6 +3,8 @@
 
 #include <stdio.h>
 #include "../bytecode.h"
+#include "../integers.h"
+#include "../glob_file.h"
 
 /*!
  * defines the maximum number of bytes that can possibly represent one single
@@ -14,14 +16,12 @@
 
 #define GLOW_FATAL_ERROR_MESSAGE "internal error"
 
-#define GLOW_IDENTIFIER 0
-#define GLOW_FLOAT 1
-#define GLOW_INTEGER 2
-#define GLOW_HEX_INTEGER 3
 
-
-extern char glow_error_message[1024];
-
+/*!
+ * \brief a jump label
+ *
+ * represents a position in the code (disappears after being compiled/assembled)
+ */
 typedef struct
 {
     /*!
@@ -36,40 +36,49 @@ typedef struct
 } glow_jump_mark;
 
 
+/*!
+ *
+ */
 typedef struct
 {
     const char* name;
 
+    enum glow_jump_type {
+        GLOW_JUMP_TO_LABEL,
+        GLOW_METHOD_CALL
+    } type;
+
     /*!
      * \brief where the jump has to be linked
      */
-    long link_pos;
+    glow_int32 link_pos;
 
     /*!
-     * \brief from where the jum starts (normally == where + 4)
+     * \brief from where the jump starts (normally == where + 4)
      */
-    long from_where;
+    glow_int32 from_where;
 } glow_jump;
+
 
 typedef struct
 {
     char* buffer;
-    int used_size;
-    int buffer_size;
+    glow_uint32 used_size;
+    glow_uint32 buffer_size;
 
     /*!
      * \brief marks that can be jumped to
      */
     glow_jump_mark* jump_marks;
-    int jump_marks_count;
-    int jump_marks_used_count;
+    glow_uint32 jump_marks_count;
+    glow_uint32 jump_marks_used_count;
 
     /*!
      * \brief actual jumps, that must be linked
      */
     glow_jump* jumps;
-    int jumps_count;
-    int jumps_used_count;
+    glow_uint32 jumps_count;
+    glow_uint32 jumps_used_count;
 } glow_bytecode_block;
 
 
@@ -80,7 +89,12 @@ typedef struct glow_asm_inst_
 {
     int is_jump_mark;
     char* operation;
-    int operand_1_type;
+    enum {
+        GLOW_IDENTIFIER = 0,
+        GLOW_FLOAT = 1,
+        GLOW_INTEGER = 2,
+        GLOW_HEX_INTEGER = 3,
+    } operand_1_type;
     char* operand_1;
 } glow_assembler_instruction;
 
@@ -123,10 +137,11 @@ long long glow_get_integer_operand64(const glow_assembler_instruction* inst, int
 void glow_add_bytecode(glow_bytecode_block* block, const char* bytes, int byte_count);
 
 
-void glow_add_jump_mark(glow_bytecode_block* block, const char* name, long where);
+void glow_add_jump_mark(glow_bytecode_block* block, const char* name, glow_uint32 where);
 
 
-void glow_add_jump(glow_bytecode_block* block, const char* name, long link_pos, long from_where);
+void glow_add_jump(glow_bytecode_block* block, const char* name,
+                   glow_uint32 link_pos, glow_uint32 from_where, enum glow_jump_type type);
 
 
 /*!
@@ -136,26 +151,6 @@ void glow_add_jump(glow_bytecode_block* block, const char* name, long link_pos, 
  * \return 0 if succeeded, nonzero otherwise
  */
 int glow_compile_instruction(glow_bytecode_block* block, glow_assembler_instruction* inst);
-
-
-/*!
- * saves a glow bytecode file (*.glob format) to the stream
- */
-void glow_save_glob(glow_bytecode_block* block, FILE* stream);
-
-
-/*!
- * reads a glow bytecode file (*.glob format) from the stream
- */
-void glow_load_glob(glow_bytecode_block* block, FILE* stream);
-
-
-/*!
- * \brief prints the last error
- * \param err_msg the buffer to write the error message to
- * \param buffer_size the size of the specified buffer
- */
-void glow_get_last_error(char* err_msg, int buffer_size);
 
 
 #endif // GLOW_BYTECODEASSEMBLER_H_
