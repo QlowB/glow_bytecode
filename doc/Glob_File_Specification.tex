@@ -99,6 +99,9 @@ Glow object files constist of
 \subsection*{Header}
 The header is a fixed-size data structure at the beginning of every Glow object file.
 
+Note that the data fields in the following structures are stored in the file in
+exactly the here defined order. No padding is used.
+
 \begin{code}[language=C]
 structure header {
     4 bytes: magic number;
@@ -183,6 +186,16 @@ structure symbol_table_entry {
 
 \paragraph{argument2}
     The argument is a reference to the constant table entry containing the method name (if needed).
+
+
+\subsubsection*{Symbol Types}
+Depending on the value in \verb|symbol_table_entry::type|, the meaning of the symbol entry
+differs.
+
+An entry of type \verb|GLOB_CLASS_REFERENCE| represents a class type. In this case,
+\verb|symbol_table_entry::argument1| is an index pointing to an entry in the constant table.
+The value \verb|symbol_table_entry::argument2| is ignored.
+
 
 
 Several bytecode instructions will contain a link to an entry of this table:

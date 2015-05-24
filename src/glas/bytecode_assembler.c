@@ -25,23 +25,32 @@ int glow_link(glow_bytecode_block* program)
         glow_jump* jmp = &program->jumps[i];
         const char* name = jmp->name;
         int found = 0;
-        for (int j = 0; j < program->jump_marks_used_count; j++) {
-            glow_jump_mark* jmp_mark = &program->jump_marks[j];
-            if (strcmp(jmp_mark->name, name) == 0) {
-                glow_int32 reljump = (glow_int32) jmp_mark->where -
-                        (glow_int32) jmp->from_where;
-                char* where = program->buffer + jmp->link_pos;
-                *(glow_int32*) where = reljump;
-                found = 1;
-                break;
+        if (jmp->type == GLOW_JUMP_TO_LABEL) {
+            for (int j = 0; j < program->jump_marks_used_count; j++) {
+                glow_jump_mark* jmp_mark = &program->jump_marks[j];
+                if (strcmp(jmp_mark->name, name) == 0) {
+                    glow_int32 reljump = (glow_int32) jmp_mark->where -
+                            (glow_int32) jmp->from_where;
+                    char* where = program->buffer + jmp->link_pos;
+                    *(glow_int32*) where = reljump;
+                    found = 1;
+                    break;
+                }
             }
         }
+        else {
+            int symbol_table_index =
+                glow_get_symbol_table_index(program, name);
+        }
+        
 
         if (found == 0) {
+            char buffer[1024];
             if (strlen(name) < 900)
-                sprintf(glow_error_message, "cannot find jump label %s", name);
+                sprintf(buffer, "cannot find jump label %s", name);
             else
-                sprintf(glow_error_message, "cannot find jump label");
+                sprintf(buffer, "cannot find jump label");
+            glow_set_last_error(buffer);
             return 1;
         }
     }
@@ -52,9 +61,10 @@ int glow_link(glow_bytecode_block* program)
 
 void glow_init_block(glow_bytecode_block* block)
 {
-    block->buffer_size = new_buffer_size;
-    block->buffer = malloc(block->buffer_size);
-    block->used_size = 0;
+    block->allocated_bytecode_size = new_buffer_size;   // size of allocated space
+    block->object_content.bytecode_data =
+            malloc(block->allocated_bytecode_size);     // actual allocated space
+    block->object_content.bytecode_size = 0;            // used dada size
 
     block->jump_marks_count = new_jump_marks_size;
     block->jump_marks = malloc(block->jump_marks_count * sizeof *block->jump_marks);
@@ -160,7 +170,7 @@ void glow_add_jump(glow_bytecode_block* block,
     }
 
     block->jumps[block->jumps_used_count].name = name;
-    block->jumps[block->jumps_used_count].type = typ;
+    block->jumps[block->jumps_used_count].type = type;
     block->jumps[block->jumps_used_count].link_pos = link_pos;
     block->jumps[block->jumps_used_count].from_where = from_where;
     block->jumps_used_count++;
@@ -180,7 +190,7 @@ int glow_compile_instruction(glow_bytecode_block* block, glow_assembler_instruct
         return 0;
     }
     else if (inst->operation == 0) {
-        strcpy(glow_error_message, GLOW_FATAL_ERROR_MESSAGE);
+        glow_set_last_error(GLOW_FATAL_ERROR_MESSAGE);
         return 1;
     }
 
@@ -250,8 +260,8 @@ int glow_compile_instruction(glow_bytecode_block* block, glow_assembler_instruct
     case GLOW_CALL_MEMBER_VIRTUAL:
     case GLOW_CALL_STATIC:
 
-        bytes_written = glow_compile_single_int(
-                code_buf, operation, inst, FOUR_BYTES);
+        bytes_written = glow_compile_call(
+                code_buf, block, operation, inst, GLOW_METHOD_CALL);
         break;
 
     case GLOW_LOAD_CONSTANT_INT64:
@@ -261,17 +271,15 @@ int glow_compile_instruction(glow_bytecode_block* block, glow_assembler_instruct
         break;
 
     case GLOW_JUMP:
-    case GLOW_JUMP_IF_ZERO:
-    // case GLOW_JUMP_IF_EQUAL:
-    case GLOW_JUMP_IF_NOT_ZERO:
-    // case GLOW_JUMP_IF_NOT_EQUAL:
+    case GLOW_JUMP_IF_ZERO: // == GLOW_JUMP_IF_EQUAL:
+    case GLOW_JUMP_IF_NOT_ZERO: // == GLOW_JUMP_IF_NOT_EQUAL:
     case GLOW_JUMP_IF_GREATER:
     case GLOW_JUMP_IF_LESS:
     case GLOW_JUMP_IF_GREATER_OR_EQUAL:
     case GLOW_JUMP_IF_LESS_OR_EQUAL:
 
         bytes_written = glow_compile_jump(
-                code_buf, block, operation, inst);
+                code_buf, block, operation, inst, GLOW_JUMP_TO_LABEL);
         break;
 
     case GLOW_NO_OPERATION:

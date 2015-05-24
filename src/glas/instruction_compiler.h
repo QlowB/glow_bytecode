@@ -31,14 +31,13 @@ int glow_compile_single(char* buf, glow_instruction oper);
 
 /*!
  * \brief compiles a jump instruction
+ * \param buf the buffer to write to
  * \param block the block to write to
  * \param oper the operation to compile
  * \param inst the instruction to compile
- * \param mark a mark
  * \return -1 on fail, number of bytes written otherwise
  */
 int glow_compile_jump(char* buf, glow_bytecode_block* block, glow_instruction oper,
-                      const struct glow_asm_inst_* inst);
-
+                      const struct glow_asm_inst_* inst, glow_jump_type type);
 
 #endif // GLOW_INSTRUCTIONCOMPILER_H_

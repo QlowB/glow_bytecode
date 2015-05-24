@@ -35,6 +35,11 @@ typedef struct
     long where;
 } glow_jump_mark;
 
+typedef enum glow_jump_t_ {
+    GLOW_JUMP_TO_LABEL,
+    GLOW_METHOD_CALL
+} glow_jump_type;
+
 
 /*!
  *
@@ -43,10 +48,7 @@ typedef struct
 {
     const char* name;
 
-    enum glow_jump_type {
-        GLOW_JUMP_TO_LABEL,
-        GLOW_METHOD_CALL
-    } type;
+    glow_jump_type type;
 
     /*!
      * \brief where the jump has to be linked
@@ -60,11 +62,25 @@ typedef struct
 } glow_jump;
 
 
+/*!
+ * 
+ */
 typedef struct
 {
-    char* buffer;
-    glow_uint32 used_size;
-    glow_uint32 buffer_size;
+    /*!
+     * content that can be written to a file afterwards
+     */
+    glow_object_content object_content;
+
+    /*!
+     * actual allocated size of the bytecode array in \link object_content
+     */
+    glow_uint32 allocated_bytecode_size;
+
+    /*!
+     * actual allocated number ofthe symbol table in \link object_content
+     */
+    glow_uint32 allocated_symbols_count;
 
     /*!
      * \brief marks that can be jumped to
@@ -141,7 +157,7 @@ void glow_add_jump_mark(glow_bytecode_block* block, const char* name, glow_uint3
 
 
 void glow_add_jump(glow_bytecode_block* block, const char* name,
-                   glow_uint32 link_pos, glow_uint32 from_where, enum glow_jump_type type);
+                   glow_uint32 link_pos, glow_uint32 from_where, glow_jump_type type);
 
 
 /*!

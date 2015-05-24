@@ -2,6 +2,7 @@
 #include "bytecode_assembler.h"
 #include "../bytecode.h"
 #include "../integers.h"
+#include "../glow_error.h"
 
 #include <string.h>
 #include <stdlib.h>
@@ -16,7 +17,9 @@ int glow_compile_single_int(char* buf, glow_instruction oper,
     if (inst->operand_1 != 0) {
         if (inst->operand_1_type != GLOW_INTEGER &&
                 inst->operand_1_type != GLOW_HEX_INTEGER) {
-            sprintf(glow_error_message, "operand of %s must be an integer", inst->operation);
+            char buffer[1024];
+            sprintf(buffer, "operand of %s must be an integer", inst->operation);
+            glow_set_last_error(buffer);
             return -1;
         }
         long long val = glow_get_integer_operand64(inst, 1);
@@ -44,7 +47,9 @@ int glow_compile_single_int(char* buf, glow_instruction oper,
         }
 
         if (val > max || val < min) {
-            sprintf(glow_error_message, "operand of %s is out of range", inst->operation);
+            char buffer[1024];
+            sprintf(buffer, "operand of %s is out of range", inst->operation);
+            glow_set_last_error(buffer);
             return -1;
         }
 
@@ -77,25 +82,25 @@ int glow_compile_single(char* buf, glow_instruction oper)
 
 
 int glow_compile_jump(char* code_buf, glow_bytecode_block* block, glow_instruction oper,
-                      const struct glow_asm_inst_* inst)
+                      const struct glow_asm_inst_* inst, glow_jump_type type)
 {
     code_buf[0] = oper;
     memset(code_buf + 1, 0, 4);
 
     if (inst->operand_1 == 0) {
-        sprintf(glow_error_message,
+        char buffer[1024];
+        sprintf(buffer,
                 "%s needs a destination operand (integer or jump label)",
                 inst->operation);
+        glow_set_last_error(buffer);
         return -1;
     }
 
     long length = strlen(inst->operand_1);
     char* copy = malloc(length + 1);
     memcpy(copy, inst->operand_1, length + 1);
-    glow_add_jump(block, copy, block->used_size + 1, block->used_size + 5);
+    glow_add_jump(block, copy, block->used_size + 1, block->used_size + 5, type);
     return 5;
 }
-
-
 
 
