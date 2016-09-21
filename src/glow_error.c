@@ -1,4 +1,5 @@
 #include "glow_error.h"
+#include <string.h>
 
 char error_buffer[2048];
 

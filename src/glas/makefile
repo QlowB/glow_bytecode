@@ -4,7 +4,7 @@ YACC        := bison
 CFLAGS      := -Wall -std=gnu99
 LDFLAGS     :=
 DEPS        := *.h
-OBJECTS     := bytecode_assembler.o instruction_compiler.o conversion_table.o main.c parser.o tokens.o run_options.o
+OBJECTS     := bytecode_assembler.o instruction_compiler.o conversion_table.o main.c parser.o tokens.o run_options.o ../glob_file.o ../glow_error.o
 EXECUTABLE  := glas
 
 all: $(OBJECTS) $(EXECUTABLE)

@@ -31,7 +31,8 @@ int glow_link(glow_bytecode_block* program)
                 if (strcmp(jmp_mark->name, name) == 0) {
                     glow_int32 reljump = (glow_int32) jmp_mark->where -
                             (glow_int32) jmp->from_where;
-                    char* where = program->buffer + jmp->link_pos;
+                    char* where = program->object_content.bytecode_data +
+                        jmp->link_pos;
                     *(glow_int32*) where = reljump;
                     found = 1;
                     break;
@@ -39,8 +40,8 @@ int glow_link(glow_bytecode_block* program)
             }
         }
         else {
-            int symbol_table_index =
-                glow_get_symbol_table_index(program, name);
+            //int symbol_table_index =
+            //    glow_get_symbol_table_index(program, name);
         }
         
 
@@ -78,7 +79,7 @@ void glow_init_block(glow_bytecode_block* block)
 
 void glow_destroy_block(glow_bytecode_block* block)
 {
-    free(block->buffer);
+    glow_free_object_content(&block->object_content);
     free(block->jump_marks);
     for (int i = 0; i < block->jumps_used_count; i++) {
         free((void*) block->jumps[i].name);
@@ -94,7 +95,8 @@ void glow_init_instruction(glow_assembler_instruction* inst)
 }
 
 
-long long glow_get_integer_operand64(const glow_assembler_instruction* inst, int operand)
+long long glow_get_integer_operand64(const glow_assembler_instruction* inst,
+        int operand)
 {
     long long val = 0;
     char* op = 0;
@@ -119,19 +121,24 @@ long long glow_get_integer_operand64(const glow_assembler_instruction* inst, int
 }
 
 
-void glow_add_bytecode(glow_bytecode_block* block, const char* bytes, int byte_count)
+void glow_add_bytecode(glow_bytecode_block* block, const char* bytes,
+        int byte_count)
 {
-    while (block->used_size + byte_count >= block->buffer_size) {
-        char* new_buffer = malloc(block->buffer_size * 2);
-        memcpy(new_buffer, block->buffer, block->buffer_size);
-        memset(new_buffer + block->buffer_size, 0, block->buffer_size);
-        block->buffer_size *= 2;
-        free(block->buffer);
-        block->buffer = new_buffer;
+    while (block->object_content.bytecode_size + byte_count >=
+            block->allocated_bytecode_size) {
+        char* new_buffer = malloc(block->allocated_bytecode_size * 2);
+        memcpy(new_buffer, block->object_content.bytecode_data,
+                block->allocated_bytecode_size);
+        memset(new_buffer + block->allocated_bytecode_size, 0,
+                block->allocated_bytecode_size);
+        block->allocated_bytecode_size *= 2;
+        free(block->object_content.bytecode_data);
+        block->object_content.bytecode_data = new_buffer;
     }
     
-    memcpy(block->buffer + block->used_size, bytes, byte_count);
-    block->used_size += byte_count;
+    memcpy(block->object_content.bytecode_data +
+            block->object_content.bytecode_size, bytes, byte_count);
+    block->object_content.bytecode_size += byte_count;
 }
 
 
@@ -156,7 +163,7 @@ void glow_add_jump_mark(glow_bytecode_block* block, const char* name, glow_uint3
 
 void glow_add_jump(glow_bytecode_block* block,
                    const char* name, glow_uint32 link_pos,
-                   glow_uint32 from_where, enum glow_jump_type type)
+                   glow_uint32 from_where, glow_jump_type type)
 {
     if (block->jumps_used_count + 1 >= block->jumps_count) {
         glow_jump* new_buffer = malloc(block->jumps_count * 2);
@@ -183,10 +190,12 @@ void glow_add_jump(glow_bytecode_block* block,
  * \param inst the assembly data to compile
  * \return 0 if succeeded, nonzero otherwise
  */
-int glow_compile_instruction(glow_bytecode_block* block, glow_assembler_instruction* inst)
+int glow_compile_instruction(glow_bytecode_block* block,
+        glow_assembler_instruction* inst)
 {
     if (inst->is_jump_mark) {
-        glow_add_jump_mark(block, inst->operation, block->used_size);
+        glow_add_jump_mark(block, inst->operation,
+                block->object_content.bytecode_size);
         return 0;
     }
     else if (inst->operation == 0) {
@@ -211,28 +220,38 @@ int glow_compile_instruction(glow_bytecode_block* block, glow_assembler_instruct
      * one byte argument
      */
     case GLOW_LOAD_CONSTANT_INT8:
-
         bytes_written = glow_compile_single_int(
                 code_buf, operation, inst, ONE_BYTE);
         break;
-
     case GLOW_LOAD_CONSTANT_INT16:
-
         bytes_written = glow_compile_single_int(
                 code_buf, operation, inst, TWO_BYTES);
+        bytes_written = glow_compile_single_int(
+                code_buf, operation, inst, FOUR_BYTES);
+        break;
+    case GLOW_LOAD_CONSTANT_INT64:
+        bytes_written = glow_compile_single_int(
+                code_buf, operation, inst, EIGHT_BYTES);
         break;
 
-    case GLOW_LOAD_CONSTANT_INT32:
+    /*
+     * local loads come with a 32-bit offset
+     */
     case GLOW_LOAD_LOCAL_INT8:
     case GLOW_LOAD_LOCAL_INT16:
     case GLOW_LOAD_LOCAL_INT32:
     case GLOW_LOAD_LOCAL_INT64:
     case GLOW_LOAD_LOCAL_REFERENCE:
+
     case GLOW_STORE_LOCAL_INT8:
     case GLOW_STORE_LOCAL_INT16:
     case GLOW_STORE_LOCAL_INT32:
     case GLOW_STORE_LOCAL_INT64:
     case GLOW_STORE_LOCAL_REFERENCE:
+
+        bytes_written = glow_compile_single_int(
+                code_buf, operation, inst, FOUR_BYTES);
+        break;
 
     case GLOW_ALLOCATE_OBJECT:
     case GLOW_DELETE_OBJECT:
@@ -260,16 +279,9 @@ int glow_compile_instruction(glow_bytecode_block* block, glow_assembler_instruct
     case GLOW_CALL_MEMBER_VIRTUAL:
     case GLOW_CALL_STATIC:
 
-        bytes_written = glow_compile_call(
-                code_buf, block, operation, inst, GLOW_METHOD_CALL);
+        //bytes_written = glow_compile_call(
+        //        code_buf, block, operation, inst, GLOW_METHOD_CALL);
         break;
-
-    case GLOW_LOAD_CONSTANT_INT64:
-
-        bytes_written = glow_compile_single_int(
-                code_buf, operation, inst, EIGHT_BYTES);
-        break;
-
     case GLOW_JUMP:
     case GLOW_JUMP_IF_ZERO: // == GLOW_JUMP_IF_EQUAL:
     case GLOW_JUMP_IF_NOT_ZERO: // == GLOW_JUMP_IF_NOT_EQUAL:

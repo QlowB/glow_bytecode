@@ -1,6 +1,7 @@
 #include "bytecode_assembler.h"
 #include "conversion_table.h"
 #include "run_options.h"
+#include "../glow_error.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -9,6 +10,7 @@
 
 
 extern glow_bytecode_block* program;
+extern const char* glow_error_message;
 
 // bison error message
 extern char error_type[512];
@@ -31,8 +33,6 @@ int main(int argc, const char** argv)
         yyin = fopen(options.input_file, "r");
     }
 
-    memset(glow_error_message, 0, sizeof glow_error_message);
-
     int response = yyparse();
 
     if (options.input_file != 0) {
@@ -45,7 +45,7 @@ int main(int argc, const char** argv)
         int link_status = glow_link(program);
 
         if (link_status != 0) {
-            printf("linking error: %s\n", glow_error_message);
+            printf("linking error: %s\n", glow_get_last_error());
             return 1;
         }
 
@@ -63,7 +63,7 @@ int main(int argc, const char** argv)
         if (strcmp(error_type, "syntax error") == 0) {
             printf("syntax error detected.\n");
         } else {
-            printf("%s\n", glow_error_message);
+            printf("%s\n", glow_get_last_error());
         }
         printf("compilation aborted because of errors.\n");
         return 1;

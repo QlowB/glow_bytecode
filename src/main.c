@@ -46,10 +46,10 @@ char* load_bytecode(const char* path)
     long file_size = ftell(file);
     fseek(file, 0L, SEEK_SET);
 
-    if (file_size < sizeof(glow_glob_header))
+    if (file_size < sizeof(glow_glob_file))
         exit(1); // error
 
-    glow_glob_header ggh;
+    glow_glob_file ggh;
     fread(&ggh, sizeof(ggh), 1, file);
 
     fseek(file, ggh.bytecode_offset, SEEK_SET);

@@ -35,7 +35,10 @@ typedef struct
     long where;
 } glow_jump_mark;
 
-typedef enum glow_jump_t_ {
+
+
+typedef enum
+{
     GLOW_JUMP_TO_LABEL,
     GLOW_METHOD_CALL
 } glow_jump_type;
