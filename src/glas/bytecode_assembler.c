@@ -216,20 +216,16 @@ int glow_compile_instruction(glow_bytecode_block* block,
 
     switch (operation) {
 
+    case GLOW_NO_OPERATION:
+        bytes_written = glow_compile_single(
+                code_buf, operation
+        );
+        break;
+
     /*
      * one byte argument
      */
-    case GLOW_LOAD_CONSTANT_INT8:
-        bytes_written = glow_compile_single_int(
-                code_buf, operation, inst, ONE_BYTE);
-        break;
-    case GLOW_LOAD_CONSTANT_INT16:
-        bytes_written = glow_compile_single_int(
-                code_buf, operation, inst, TWO_BYTES);
-        bytes_written = glow_compile_single_int(
-                code_buf, operation, inst, FOUR_BYTES);
-        break;
-    case GLOW_LOAD_CONSTANT_INT64:
+    case GLOW_LOAD_CONSTANT_WORD:
         bytes_written = glow_compile_single_int(
                 code_buf, operation, inst, EIGHT_BYTES);
         break;
@@ -237,16 +233,9 @@ int glow_compile_instruction(glow_bytecode_block* block,
     /*
      * local loads come with a 32-bit offset
      */
-    case GLOW_LOAD_LOCAL_INT8:
-    case GLOW_LOAD_LOCAL_INT16:
-    case GLOW_LOAD_LOCAL_INT32:
-    case GLOW_LOAD_LOCAL_INT64:
+    case GLOW_LOAD_LOCAL_WORD:
     case GLOW_LOAD_LOCAL_REFERENCE:
-
-    case GLOW_STORE_LOCAL_INT8:
-    case GLOW_STORE_LOCAL_INT16:
-    case GLOW_STORE_LOCAL_INT32:
-    case GLOW_STORE_LOCAL_INT64:
+    case GLOW_STORE_LOCAL_WORD:
     case GLOW_STORE_LOCAL_REFERENCE:
 
         bytes_written = glow_compile_single_int(
@@ -294,19 +283,12 @@ int glow_compile_instruction(glow_bytecode_block* block,
                 code_buf, block, operation, inst, GLOW_JUMP_TO_LABEL);
         break;
 
-    case GLOW_NO_OPERATION:
-    case GLOW_POP_8:
-    case GLOW_POP_16:
-    case GLOW_POP_32:
-    case GLOW_POP_64:
+    case GLOW_POP:
     case GLOW_COMPARE_INT8:
     case GLOW_COMPARE_INT16:
     case GLOW_COMPARE_INT32:
     case GLOW_COMPARE_INT64:
-    case GLOW_COMPARE_UINT8:
-    case GLOW_COMPARE_UINT16:
-    case GLOW_COMPARE_UINT32:
-    case GLOW_COMPARE_UINT64:
+    case GLOW_COMPARE_UINT:
     case GLOW_COMPARE_FLOAT32:
     case GLOW_COMPARE_FLOAT64:
     case GLOW_SIGN_EXTEND_INT8_TO_INT16:
@@ -321,24 +303,15 @@ int glow_compile_instruction(glow_bytecode_block* block,
     case GLOW_NEGATE_INT64:
     case GLOW_NEGATE_FLOAT32:
     case GLOW_NEGATE_FLOAT64:
-    case GLOW_DUPLICATE_8:
-    case GLOW_DUPLICATE_16:
-    case GLOW_DUPLICATE_32:
-    case GLOW_DUPLICATE_64:
-    case GLOW_ADD_INT8:
-    case GLOW_ADD_INT16:
-    case GLOW_ADD_INT32:
-    case GLOW_ADD_INT64:
+    case GLOW_DUPLICATE:
+    case GLOW_ADD_INT:
     case GLOW_ADD_FLOAT32:
     case GLOW_ADD_FLOAT64:
     case GLOW_MULT_INT8:
     case GLOW_MULT_INT16:
     case GLOW_MULT_INT32:
     case GLOW_MULT_INT64:
-    case GLOW_MULT_UINT8:
-    case GLOW_MULT_UINT16:
-    case GLOW_MULT_UINT32:
-    case GLOW_MULT_UINT64:
+    case GLOW_MULT_UINT:
     case GLOW_MULT_FLOAT32:
     case GLOW_MULT_FLOAT64:
     case GLOW_DIV_INT8:
@@ -351,22 +324,10 @@ int glow_compile_instruction(glow_bytecode_block* block,
     case GLOW_DIV_UINT64:
     case GLOW_DIV_FLOAT32:
     case GLOW_DIV_FLOAT64:
-    case GLOW_AND_INT8:
-    case GLOW_AND_INT16:
-    case GLOW_AND_INT32:
-    case GLOW_AND_INT64:
-    case GLOW_OR_INT8:
-    case GLOW_OR_INT16:
-    case GLOW_OR_INT32:
-    case GLOW_OR_INT64:
-    case GLOW_XOR_INT8:
-    case GLOW_XOR_INT16:
-    case GLOW_XOR_INT32:
-    case GLOW_XOR_INT64:
-    case GLOW_NOT_INT8:
-    case GLOW_NOT_INT16:
-    case GLOW_NOT_INT32:
-    case GLOW_NOT_INT64:
+    case GLOW_AND_INT:
+    case GLOW_OR_INT:
+    case GLOW_XOR_INT:
+    case GLOW_NOT_INT:
     case GLOW_INT8_TO_FLOAT32:
     case GLOW_INT16_TO_FLOAT32:
     case GLOW_INT32_TO_FLOAT32:
@@ -383,18 +344,6 @@ int glow_compile_instruction(glow_bytecode_block* block,
     case GLOW_FLOAT64_TO_INT16:
     case GLOW_FLOAT64_TO_INT32:
     case GLOW_FLOAT64_TO_INT64:
-    case GLOW_UINT8_TO_UINT64:
-    case GLOW_UINT16_TO_UINT64:
-    case GLOW_UINT32_TO_UINT64:
-    case GLOW_UINT8_TO_UINT32:
-    case GLOW_UINT16_TO_UINT32:
-    case GLOW_UINT64_TO_UINT32:
-    case GLOW_UINT8_TO_UINT16:
-    case GLOW_UINT32_TO_UINT16:
-    case GLOW_UINT64_TO_UINT16:
-    case GLOW_UINT16_TO_UINT8:
-    case GLOW_UINT32_TO_UINT8:
-    case GLOW_UINT64_TO_UINT8:
     case GLOW_FLOAT32_TO_FLOAT64:
     case GLOW_FLOAT64_TO_FLOAT32:
     case GLOW_MOD_INT8:
