@@ -84,7 +84,7 @@ int glow_load_glob(glow_object_content* content, FILE* file)
 }
 
 
-int glow_save_glob(glow_object_content* content, FILE* file)
+int glow_save_glob(glow_object_content *content, FILE* file)
 {
     glob_header head;
     

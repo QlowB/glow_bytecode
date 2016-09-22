@@ -55,7 +55,7 @@ int main(int argc, const char** argv)
         } else {
             out_file = stdout;
         }
-        glow_save_glob(program, out_file);
+        glow_save_glob(&program->object_content, out_file);
         if (options.output_file != 0) {
             fclose(out_file);
         }
